@@ -1,0 +1,140 @@
+'''
+Support Vector Machine by KyushikMin
+2015.06.07
+
+Activate on Python 3.4.3 and Python 2.7.9
+
+import SVM in python and call the functions
+
+ex)
+>>> import SVM
+>>> SVM.demo()
+
+There are 2 functions
+	1. SVM (3 inputs)
+		Learning with training_feature and training_label
+		Classify the testing_feature via the result of training
+
+	2. demo (no input)
+		Operate demo SVM and print the testing labels
+'''
+from numpy.random import randn
+import numpy as np
+
+def SVM(training_feature,training_label,testing_feature):
+	'''
+	Use 2 seperable datasets as training sets 
+
+	input: training_feature,training_label,testing_feature
+	output: testing_label
+
+	training_feature and testing_feature are n x 2 numpy array form
+	Length of the training_feature and training_label should be the same
+	'''
+	n = len(training_feature)
+
+	labels = []
+	
+	# Arrange the labels
+	for i in range(n):
+		if training_label[i] not in labels:
+			labels.append(training_label[i])
+
+	# Get the support vectors
+	set1_x = []
+	set1_y = []
+	set2_x = []
+	set2_y = []
+
+	min_dist = 1000000000
+
+	for i in range(n):
+		if training_label[i] is labels[0]:
+			set1_x.append(training_feature[i][0])
+			set1_y.append(training_feature[i][1])
+		else:
+			set2_x.append(training_feature[i][0])
+			set2_y.append(training_feature[i][1])
+
+	n_1 = len(set1_x)
+	n_2 = len(set2_x)
+
+	for i in range(n_1):
+		for j in range(n_2):
+			dist = (((set2_y[j] - set1_y[i])**2) + ((set2_x[j] - set1_x[i])**2))**0.5
+
+			if dist < min_dist:
+				min_dist = dist
+				n_1min = i
+				n_2min = j
+
+	label_new = []
+
+	if set1_x[n_1min] < set2_x[n_2min]:
+		support_vector = np.array([[set1_x[n_1min], set1_y[n_1min]],[set2_x[n_2min], set2_y[n_2min]]])
+		label_new = [labels[0], labels[1]]
+	else:
+		support_vector = np.array([[set2_x[n_2min], set2_y[n_2min]],[set1_x[n_1min], set1_y[n_1min]]])
+		label_new = [labels[1], labels[0]]
+
+	# Calculating w 
+	w = np.array([0, 0])
+	alpha = 0.5
+	for i in range(2):
+		if i is 0:
+			y = -1
+			w = w + alpha * y * support_vector[i] 
+		else:
+			y = 1
+			w = w + alpha * y * support_vector[i] 
+			b = y - np.sum(w * support_vector[i])
+
+	b_1 = -1 -np.sum(w * support_vector[0])
+
+	label_testing = []
+	n_testing = len(testing_feature)
+
+	# Classification by SVM
+	count_1 = 0
+	count_2 = 0
+	for i in range(n_testing):
+		if np.sum(w * testing_feature[i]) + b_1 < 0:
+			label_testing.append(label_new[0])
+			count_1 = count_1 + 1
+		else:
+			label_testing.append(label_new[1])
+			count_2 = count_2 + 1
+
+	print('\n' + str(len(label_testing)) + ' / ' + str(len(testing_feature)) +' numbers of data are classified\n')
+	print('number of ' + label_new[0] + ': ' + str(count_1))
+	print('number of ' + label_new[1] + ': ' + str(count_2) + '\n')
+
+	return label_testing	
+
+def demo():
+	n = 100
+
+	data_1 = 1 + randn(n,2)
+	data_2 = 6 + randn(n,2)
+
+	data_training = []
+	for i in range(2*n):
+		if i <= 99:
+			data_training.append(data_1[i])
+		else:
+			data_training.append(data_2[i-n])
+
+	labels_training = []
+	for i in range(2*n):
+		if i <= n-1:
+			labels_training.append('label_1')
+		else:
+			labels_training.append('label_2')
+
+	data_testing = 4 + randn(n,2)
+	label_testing = SVM(data_training, labels_training, data_testing)
+	print(label_testing)
+	print('\n')
+
+
+
